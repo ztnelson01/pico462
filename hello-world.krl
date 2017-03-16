@@ -18,7 +18,7 @@ A first ruleset for the Quickstart
 
   rule hello_world {
     select when echo hello
-    send_directive("say") with
+    send_directive("what-up") with
       something = "Hello World"
   }
 
