@@ -1,17 +1,26 @@
 ruleset trip_store {
 
+  meta {
+    provides trips, long_trips, short_trips
+    shares trips, long_trips, short_trips
+  }
+
   global {
 
+    tripsArr = []
+
+    long_tripsArr = []
+
     trips = function() {
-      ent:trips.klog("Trips being retrieved")
+      tripsArr.klog("Trips being retrieved")
     }
 
     long_trips = function() {
-      ent:long_trips.klog("Long trips being retrieved")
+      long_tripsArr.klog("Long trips being retrieved")
     }
 
     short_trips = function() {
-      ent:trips.difference(ent:long_trips).klog("Short trips being retrieved")
+      tripsArr.difference(long_tripsArr).klog("Short trips being retrieved")
     }
 
   }
@@ -23,8 +32,7 @@ ruleset trip_store {
       timestamp = time:now()
     }
     fired {
-      trips.append({"mileage": mileage, "timestamp" :timestamp}).klog("Added trip")
-
+      tripsArr.append({"mileage": mileage, "timestamp": timestamp}).klog("Added trip")
     }
   }
 
@@ -35,7 +43,7 @@ ruleset trip_store {
       timestamp = time:now()
     }
     fired {
-      long_trips.append({"mileage": mileage, "timestamp" :timestamp}).klog("Added long trip")
+      long_tripsArr.append({"mileage": mileage, "timestamp": timestamp}).klog("Added long trip")
     }
   }
 }
