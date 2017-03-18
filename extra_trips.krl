@@ -3,7 +3,7 @@ ruleset extra_trips {
   global {
     long_trip = 1500
   }
-  
+
   rule process_trip {
     select when car new_trip
     pre {
@@ -24,7 +24,7 @@ ruleset extra_trips {
     }
     fired {
       raise explicit event "found_long_trip"
-        attributes{}
+        attributes{"trip": mileage}
       if mileage.as("Number") >= long_trip
     }
   }
