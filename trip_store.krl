@@ -7,20 +7,16 @@ ruleset trip_store {
 
   global {
 
-    tripsArr = []
-
-    long_tripsArr = []
-
     trips = function() {
-      tripsArr.klog("Trips being retrieved")
+      ent:trips
     }
 
     long_trips = function() {
-      long_tripsArr.klog("Long trips being retrieved")
+      ent:long_trips
     }
 
     short_trips = function() {
-      tripsArr.difference(long_tripsArr).klog("Short trips being retrieved")
+      ent:trips.difference(ent:long_trips)
     }
 
   }
@@ -30,9 +26,11 @@ ruleset trip_store {
     pre {
       mileage = event:attr("trip")
       timestamp = time:now()
+      trip = {"mileage": mileage, "time": timestamp}
+      all_trips = ent:trips.append(trip).klog("Adding trip")
     }
-    fired {
-      tripsArr.append({"mileage": mileage, "timestamp": timestamp}).klog("Added trip")
+    always {
+      ent:trips := all_trips
     }
   }
 
@@ -41,9 +39,17 @@ ruleset trip_store {
     pre {
       mileage = event:attr("trip")
       timestamp = time:now()
+      trip = {"mileage": mileage, "time": timestamp}
+      all_long_trips = ent:long_trips.append(trip).klog("Adding trip")
     }
-    fired {
-      long_tripsArr.append({"mileage": mileage, "timestamp": timestamp}).klog("Added long trip")
+    always {
+      ent:long_trips := all_long_trips
+    }
+  }
+
+  rule clear_trips {
+    select when car trip_reset
+    always {
     }
   }
 }
