@@ -7,10 +7,6 @@ ruleset trip_store {
 
   global {
 
-    clear_trips = []
-
-    clear_long_trips = []
-
     trips = function() {
       ent:tripArr
     }
@@ -29,8 +25,8 @@ ruleset trip_store {
     pre {
       mileage = event:attr("mileage")
       timestamp = event:attr("timestamp")
-      trip = {"mileage":mileage, "timestamp":timestamp}
-      all_trips = ent:tripArr.append(trip).klog("Adding trip")
+      trip = {"mileage": mileage, "timestamp": timestamp}
+      all_trips = ent:tripArr.append(trip)
     }
     always {
       ent:tripArr := all_trips
@@ -43,7 +39,7 @@ ruleset trip_store {
       mileage = event:attr("mileage")
       timestamp = event:attr("timestamp")
       trip = {"mileage": mileage, "timestamp": timestamp}
-      all_long_trips = ent:long_tripArr.append(trip).klog("Adding trip")
+      all_long_trips = ent:long_tripArr.append(trip)
     }
     always {
       ent:long_tripArr := all_long_trips
@@ -52,9 +48,13 @@ ruleset trip_store {
 
   rule clear_trips {
     select when car trip_reset
+    pre {
+      empty_trips = []
+      empty_long_trips = []
+    }
     always {
-      ent:tripArr := clear_trips;
-      ent:long_tripArr := clear_long_trips
+      ent:tripArr := empty_trips;
+      ent:long_tripArr := empty_long_trips
     }
   }
 }
