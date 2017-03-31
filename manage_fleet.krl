@@ -16,6 +16,14 @@ ruleset manage_fleet {
     childFromId = function(vehicle_id) {
       ent:vehicles{vehicle_id}
     }
+
+    subscriptionFromId = function(vehicle_id) {
+      "vehicle_" + vehicle_id + "_subscription"
+    }
+
+    subscriptionName = function(vehicle_id) {
+      "car:" + subscriptionFromId(vehicle_id)
+    }
   }
 
   rule create_vehicle {
@@ -42,6 +50,7 @@ ruleset manage_fleet {
     pre {
       vehicle = event:attr("new_child")
       vehicle_id = event:attr("rs_attrs"){"vehicle_id"}
+      eci = meta:eci
     }
     event:send({ "eci": vehicle.eci, "eid": "install-ruleset",
      "domain": "pico", "type": "new_ruleset",
@@ -52,6 +61,14 @@ ruleset manage_fleet {
     event:send({ "eci": vehicle.eci, "eid": "install-ruleset",
       "domain": "pico", "type": "new_ruleset",
       "attrs": { "rid": "trip_store", "vehicle_id": vehicle_id } } )
+    event:send({ "eci": eci, "eid": "subscription",
+      "domain": "wrangler", "type": "subscription",
+      "attrs": { "name": subscriptionFromId(vehicle_id),
+                 "name_space": "car",
+                 "my_role": "fleet",
+                 "subscriber_role": "vehicle",
+                 "channel_type": "subscription",
+                 "subscriber_eci": vehicle.eci } } )
     fired {
       ent:vehicles := ent:vehicles.defaultsTo({});
       ent:vehicles{vehicle_id} := vehicle
@@ -70,6 +87,8 @@ ruleset manage_fleet {
       send_directive("vehicle removed")
         with vehicle_id = vehicle_id
     fired {
+      raise wrangler event "subscription_cancellation"
+        with subscription_name = subscriptionName(vehicle_id);
       raise pico event "delete_child_request"
         attributes child_to_delete;
       ent:vehicles{[vehicle_id]} := null
