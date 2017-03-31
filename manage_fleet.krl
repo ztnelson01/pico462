@@ -1,10 +1,30 @@
 ruleset manage_fleet {
 
   meta {
-    shares vehicles
+    use module Subscriptions
+    shares vehicles, get_all_vehicle_trips, __testing
   }
 
   global {
+    __testing = {
+       "queries": [
+           {"name":"get_all_vehicle_trips"},
+           {"name":"vehicles"}
+       ],
+       "events": [
+           {
+               "domain": "car",
+               "type": "new_vehicle",
+               "attrs": ["vehicle_id"]
+           },
+           {
+               "domain": "car",
+               "type": "unneeded_vehicle",
+               "attrs": ["vehicle_id"]
+           }
+       ]
+    }
+
     nameFromId = function(vehicle_id) {
       "Vehicle " + vehicle_id + " Pico"
     }
@@ -18,11 +38,22 @@ ruleset manage_fleet {
     }
 
     subscriptionFromId = function(vehicle_id) {
-      "vehicle_" + vehicle_id + "_subscription"
+      "vehicle_" + vehicle_id
     }
 
     subscriptionName = function(vehicle_id) {
       "car:" + subscriptionFromId(vehicle_id)
+    }
+
+    urlForQuery = function(subscription) {
+      "http://localhost:8080/sky/cloud/" + subscription{"attributes"}{"subscriber_eci"} + "/trip_store/trips"
+    }
+
+    get_all_vehicle_trips = function() {
+      Subscriptions:getSubscriptions().filter(function(x) {x{"attributes"}{"subscriber_role"} == "vehicle"}).map(function(x) {
+        result = http:get(urlForQuery(x));
+        result{"content"}.decode()
+      })
     }
   }
 
@@ -68,7 +99,7 @@ ruleset manage_fleet {
                  "my_role": "fleet",
                  "subscriber_role": "vehicle",
                  "channel_type": "subscription",
-                 "subscriber_eci": vehicle.eci } } )
+                 "subscriber_eci": vehicle.eci} } )
     fired {
       ent:vehicles := ent:vehicles.defaultsTo({});
       ent:vehicles{vehicle_id} := vehicle
