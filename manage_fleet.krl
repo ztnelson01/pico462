@@ -2,14 +2,15 @@ ruleset manage_fleet {
 
   meta {
     use module Subscriptions
-    shares vehicles, get_all_vehicle_trips, __testing
+    shares vehicles, get_all_vehicle_trips, get_reports, __testing
   }
 
   global {
     __testing = {
        "queries": [
            {"name":"get_all_vehicle_trips"},
-           {"name":"vehicles"}
+           {"name":"vehicles"},
+           {"name":"get_reports"}
        ],
        "events": [
            {
@@ -58,6 +59,10 @@ ruleset manage_fleet {
         result = http:get(urlForQuery(x));
         result{"content"}.decode()
       })
+    }
+
+    get_reports = function() {
+      ent:reports
     }
   }
 
@@ -159,6 +164,10 @@ ruleset manage_fleet {
       rcn = event:attr("rcn")
       vehicle_id = event:attr("vehicle_id")
       trips = event:attr("trips")
+    }
+    always {
+      ent:reports := ent:reports.defaultsTo({});
+      ent:reports{[rcn, vehicle_id]} := trips
     }
   }
 }
