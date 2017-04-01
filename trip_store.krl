@@ -61,9 +61,9 @@ ruleset trip_store {
   rule generate_report {
     select when car generate_report
     pre {
-      eci = event:attrs("eci")
-      rcn = event:attrs("rcn")
+      eci = event:attr("sender_eci")
+      rcn = event:attr("rcn")
+      vehicle_id = event:attr("vehicle_id")
     }
-    event:send({ "eci": eci, "eid": "send_report", "domain": "car", "type": "send_report", "attrs": {"rcn": rcn, "trips": ent:tripArr}})
   }
 }
