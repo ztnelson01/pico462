@@ -152,4 +152,13 @@ ruleset manage_fleet {
       if subscription{"attributes"}{"subscriber_role"} == "vehicle" then
         event:send({ "eci": subscription{"attributes"}{"subscriber_eci"}, "eid": "generate_report", "domain": "car", "type": "generate_report", "attrs": {"rcn": rcn, "sender_eci": eci, "vehicle_id": subscription{"name"}}})
   }
+
+  rule collect_report {
+    select when car send_report
+    pre {
+      rcn = event:attr("rcn")
+      vehicle_id = event:attr("vehicle_id")
+      trips = event:attr("trips")
+    }
+  }
 }

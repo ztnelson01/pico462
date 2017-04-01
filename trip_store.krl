@@ -64,6 +64,10 @@ ruleset trip_store {
       eci = event:attr("sender_eci")
       rcn = event:attr("rcn")
       vehicle_id = event:attr("vehicle_id")
+      attributes = {"rcn": rcn,
+      "vehicle_id": vehicle_id,
+      "trips": ent:tripArr}
     }
+    event:send({ "eci": eci, "eid": "send_report", "domain": "car", "type": "send_report", "attrs": attributes})
   }
 }
