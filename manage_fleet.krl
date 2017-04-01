@@ -21,6 +21,10 @@ ruleset manage_fleet {
                "domain": "car",
                "type": "unneeded_vehicle",
                "attrs": ["vehicle_id"]
+           },
+           {
+                "domain": "car",
+                "type": "start_report"
            }
        ]
     }
@@ -126,26 +130,39 @@ ruleset manage_fleet {
     }
   }
 
-  rule generate_report {
-    select when car generate_report
+  rule start_report {
+    select when car start_report
     pre {
       rcn = time:now().replace(".", ":")
+      eci = meta:eci
     }
     fired {
-      raise explicit event "start_report"
+      raise explicit event "generate_report"
         attributes {"rcn": rcn, "eci": eci}
     }
   }
 
-  rule start_report {
-    select when explicit start_report
+  rule generate_report {
+    select when explicit generate_report
     foreach Subscriptions:getSubscriptions() setting (subscription)
       pre {
-        eci = event:attrs("eci")
-        rcn = event:attrs("rcn")
+        eci = event:attrs().eci.klog("Attribute eci")
+        rcn = event:attrs().rcn.klog("Attribute rcn")
       }
       if subscription{"attributes"}{"subscriber_role"} == "vehicle" then
-        event:send({ "eci": subs_attrs{"subscriber_eci"}, "eid": "generate_report", "domain": "car", "type": "generate_report",
-        "attrs": {"rcn": rcn, "sender_eci": eci}})
+        event:send({ "eci": subscription{"attributes"}{"subscriber_eci"}, "eid": "generate_report", "domain": "car", "type": "generate_report", "attrs": {"rcn": rcn, "sender_eci": eci,"vehicle_id": subscription{"name"}}})
+  }
+
+  rule collect_reports {
+    select when car send_report
+    pre {
+      rcn = event:attrs("rcn")
+      trips = event:attrs("trips")
+      vehicle_id = events:attrs("vehicle_id")
+    }
+    always {
+      ent:reports := ent:reports.defaultsTo({});
+      ent:reports{vehicle_id} := trips
+    }
   }
 }

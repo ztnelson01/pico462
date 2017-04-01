@@ -57,4 +57,13 @@ ruleset trip_store {
       ent:long_tripArr := empty_long_trips
     }
   }
+
+  rule generate_report {
+    select when car generate_report
+    pre {
+      eci = event:attrs("eci")
+      rcn = event:attrs("rcn")
+    }
+    event:send({ "eci": eci, "eid": "send_report", "domain": "car", "type": "send_report", "attrs": {"rcn": rcn, "trips": ent:tripArr}})
+  }
 }
