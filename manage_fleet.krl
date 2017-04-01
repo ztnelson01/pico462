@@ -125,4 +125,27 @@ ruleset manage_fleet {
       ent:vehicles{[vehicle_id]} := null
     }
   }
+
+  rule generate_report {
+    select when car generate_report
+    pre {
+      rcn = time:now().replace(".", ":")
+    }
+    fired {
+      raise explicit event "start_report"
+        attributes {"rcn": rcn, "eci": eci}
+    }
+  }
+
+  rule start_report {
+    select when explicit start_report
+    foreach Subscriptions:getSubscriptions() setting (subscription)
+      pre {
+        eci = event:attrs("eci")
+        rcn = event:attrs("rcn")
+      }
+      if subscription{"attributes"}{"subscriber_role"} == "vehicle" then
+        event:send({ "eci": subs_attrs{"subscriber_eci"}, "eid": "generate_report", "domain": "car", "type": "generate_report",
+        "attrs": {"rcn": rcn, "sender_eci": eci}})
+  }
 }
