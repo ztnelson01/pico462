@@ -26,6 +26,10 @@ ruleset manage_fleet {
            {
                 "domain": "car",
                 "type": "start_report"
+           },
+           {
+                "domain": "car",
+                "type": "clear_reports"
            }
        ]
     }
@@ -167,7 +171,16 @@ ruleset manage_fleet {
     }
     always {
       ent:reports := ent:reports.defaultsTo({});
+      ent:reports{[rcn, "vehicles_responded"]} := ent:vehicles.length();
       ent:reports{[rcn, vehicle_id]} := trips
+    }
+  }
+
+  rule clear_reports {
+    select when car clear_reports
+    always {
+      ent:reports := {};
+      ent:counter := 0
     }
   }
 }
