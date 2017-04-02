@@ -2,7 +2,7 @@ ruleset manage_fleet {
 
   meta {
     use module Subscriptions
-    shares vehicles, get_all_vehicle_trips, get_reports, __testing
+    shares vehicles, get_all_vehicle_trips, last_five_reports, __testing
   }
 
   global {
@@ -10,7 +10,7 @@ ruleset manage_fleet {
        "queries": [
            {"name":"get_all_vehicle_trips"},
            {"name":"vehicles"},
-           {"name":"get_reports"}
+           {"name": "last_five_reports"}
        ],
        "events": [
            {
@@ -65,8 +65,9 @@ ruleset manage_fleet {
       })
     }
 
-    get_reports = function() {
-      ent:reports
+    last_five_reports = function() {
+      length = ent:reports.values().length();
+      (length > 5) => ent:reports.values().slice(length - 5, length - 1) | ent:reports.values()
     }
   }
 
